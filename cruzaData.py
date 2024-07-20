@@ -1,4 +1,5 @@
 import pandas as pd
+import matplotlib.pyplot as plt
 
 class CruzaData:
     def __init__(self, csv_path):
@@ -10,72 +11,46 @@ class CruzaData:
     def save_excel(self, df, path):
         # Salvar o DataFrame em um arquivo Excel
         df.to_excel(path, index=False, engine='openpyxl')
+        
+    def save_csv(self, df, path):
+        df.to_csv(path, index=False)
 
-    def cruzamento_genero_x_idade(self):
-        # Agrupar por Gênero e Idade
-        analysis = self.df.groupby(['Gênero', 'Idade']).size().reset_index(name='Quantidade')
-        print(analysis)
-        self.save_excel(analysis, r'C:\\Projetos\\CruzaData\\Util\\Arquivos\\Relatorios\\cruzamento_genero_x_idade.xlsx')
+    def save_json(self, df, path):
+        df.to_json(path, orient='records', lines=True)
 
-    def cruzamento_cargo_x_escolaridade(self):
-        # Agrupar por Escolaridade e Cargo Atual
-        education_satisfaction = self.df.groupby(['Escolaridade', 'Qual é o seu cargo atual na empresa?']).size().reset_index(name='Quantidade')
-        print(education_satisfaction)
-        self.save_excel(education_satisfaction, r'C:\\Projetos\\CruzaData\\Util\\Arquivos\\Relatorios\\cruzamento_cargo_x_escolaridade.xlsx')
 
-    def cruzamento_estilo_lideranca_x_idade(self):
-        # Agrupar por Idade e Estilo de Liderança
-        leadership_age = self.df.groupby(['Idade', 'Como você descreveria o estilo de liderança do seu superior direto?']).size().reset_index(name='Quantidade')
-        print(leadership_age)
-        self.save_excel(leadership_age, r'C:\\Projetos\\CruzaData\\Util\\Arquivos\\Relatorios\\cruzamento_estilo_lideranca_x_idade.xlsx')
+    def executar_analise_cruzada(self, colunas_agrupamento, caminho, grafico='false', formato='excel', nome_coluna='Quantidade'):
+        try:
+            # Realiza a análise cruzada
+            analise_cruzamento = self.df.groupby(colunas_agrupamento).size().reset_index(name=nome_coluna)
+            print(analise_cruzamento)
+            
+            # Salva os resultados no formato especificado
+            if formato == 'excel':
+                self.save_excel(analise_cruzamento, caminho)
+            elif formato == 'csv':
+                self.save_csv(analise_cruzamento, caminho)
+            elif formato == 'json':
+                self.save_json(analise_cruzamento, caminho)
+            else:
+                raise ValueError("Formato especificado não é suportado. Use 'excel', 'csv' ou 'json'.")
+            
+            # Gera plot da análise
+            if grafico == 'true':
+                self.plot_analise(analise_cruzamento, colunas_agrupamento[0], nome_coluna, title=f'Análise de {colunas_agrupamento}')
+        
+        except ValueError as ve:
+            print(f"Erro de valor: {ve}")
+        except FileNotFoundError as fe:
+            print(f"Arquivo não encontrado: {fe}")
+        except Exception as e:
+            print(f"Erro inesperado: {e}")
 
-    def analyze_avg_service_time(self):
-        # Limpar e converter o tempo de experiência para numérico
-        self.df['Quanto tempo você tem de experiência no seu cargo atual?'] = self.df['Quanto tempo você tem de experiência no seu cargo atual?'].str.replace(' anos', '').str.replace(' mês', '').str.strip()
-        self.df['Quanto tempo você tem de experiência no seu cargo atual?'] = pd.to_numeric(self.df['Quanto tempo você tem de experiência no seu cargo atual?'], errors='coerce')
-        avg_service_time = self.df.groupby(['Gênero', 'Qual é o seu cargo atual na empresa?'])['Quanto tempo você tem de experiência no seu cargo atual?'].mean().reset_index(name='Average_Service_Time')
-        print(avg_service_time)
-        self.save_excel(avg_service_time, r'C:\\Projetos\\CruzaData\\Util\\Arquivos\\Relatorios\\avg_service_time.xlsx')
 
-    def cruzamento_estilo_lideranca_x_motivacao_equipe(self):
-        # Agrupar por Estilo de Liderança e Nível Geral de Motivação
-        analysis = self.df.groupby(['Como você descreveria o estilo de liderança do seu superior direto?', 'Como você classificaria o nível geral de motivação da equipe?']).size().reset_index(name='Quantidade')
-        print(analysis)
-        self.save_excel(analysis, r'C:\\Projetos\\CruzaData\\Util\\Arquivos\\Relatorios\\cruzamento_estilo_lideranca_x_motivacao_equipe.xlsx')
+    def filtrar_dados(self, condicoes):
+        self.df = self.df.query(condicoes)
 
-    def cruzamento_estilo_lideranca_x_desenvolvimento_profissional(self):
-        # Agrupar por Estilo de Liderança e Percepção sobre Desenvolvimento Profissional
-        analysis = self.df.groupby(['Como você descreveria o estilo de liderança do seu superior direto?', 'Você acredita que o estilo de liderança adotado pelo seu superior direto influencia sua motivação no trabalho?']).size().reset_index(name='Quantidade')
-        print(analysis)
-        self.save_excel(analysis, r'C:\\Projetos\\CruzaData\\Util\\Arquivos\\Relatorios\\cruzamento_estilo_lideranca_x_desenvolvimento_profissional.xlsx')
-
-    def cruzamento_estilo_lideranca_x_satisfacao_trabalho(self):
-        # Agrupar por Estilo de Liderança e Nível de Satisfação no Trabalho
-        analysis = self.df.groupby(['Como você descreveria o estilo de liderança do seu superior direto?', 'Você sente que seu superior direto reconhece e valoriza suas contribuições para a equipe?']).size().reset_index(name='Quantidade')
-        print(analysis)
-        self.save_excel(analysis, r'C:\\Projetos\\CruzaData\\Util\\Arquivos\\Relatorios\\cruzamento_estilo_lideranca_x_satisfacao_trabalho.xlsx')
-
-    def cruzamento_estilo_lideranca_x_feedback(self):
-        analysis = self.df.groupby(['Como você descreveria o estilo de liderança do seu superior direto?', 'Você acha que seu superior direto está aberto a sugestões e feedback dos membros da equipe?']).size().reset_index(name='Quantidade')
-        print(analysis)
-        self.save_excel(analysis, r'C:\\Projetos\\CruzaData\\Util\\Arquivos\\Relatorios\\cruzamento_estilo_lideranca_x_feedback.xlsx')
-
-    def cruzamento_estilo_lideranca_x_motivacao_pessoal(self):
-        analysis = self.df.groupby(['Como você descreveria o estilo de liderança do seu superior direto?', 'Você acredita que o estilo de liderança adotado pelo seu superior direto influencia sua motivação no trabalho?']).size().reset_index(name='Quantidade')
-        print(analysis)
-        self.save_excel(analysis, r'C:\\Projetos\\CruzaData\\Util\\Arquivos\\Relatorios\\cruzamento_estilo_lideranca_x_motivacao_pessoal.xlsx')
-
-    def cruzamento_estilo_lideranca_x_comunicacao_metas(self):
-        analysis = self.df.groupby(['Como você descreveria o estilo de liderança do seu superior direto?', 'Com que frequência seu superior direto comunica as metas e objetivos da equipe?']).size().reset_index(name='Quantidade')
-        print(analysis)
-        self.save_excel(analysis, r'C:\\Projetos\\CruzaData\\Util\\Arquivos\\Relatorios\\cruzamento_estilo_lideranca_x_comunicacao_metas.xlsx')
-
-    def cruzamento_estilo_lideranca_x_empatia_compreensao(self):
-        analysis = self.df.groupby(['Como você descreveria o estilo de liderança do seu superior direto?', 'Você sente que seu superior direto demonstra empatia e compreensão em relação às suas necessidades individuais?']).size().reset_index(name='Quantidade')
-        print(analysis)
-        self.save_excel(analysis, r'C:\\Projetos\\CruzaData\\Util\\Arquivos\\Relatorios\\cruzamento_estilo_lideranca_x_empatia_compreensao.xlsx')
-
-    def cruzamento_estilo_lideranca_x_autonomia_tomada_decisoes(self):
-            analysis = self.df.groupby(['Como você descreveria o estilo de liderança do seu superior direto?', 'Você se sente capacitado(a) e autônomo(a) para tomar decisões em seu trabalho?']).size().reset_index(name='Quantidade')
-            print(analysis)
-            self.save_excel(analysis, r'C:\\Projetos\\CruzaData\\Util\\Arquivos\\Relatorios\\cruzamento_estilo_lideranca_x_autonomia_tomada_decisoes.xlsx')    
+    def plot_analise(self, df, x_col, y_col, kind='bar', title=''):
+        df.plot(kind=kind, x=x_col, y=y_col)
+        plt.title(title)
+        plt.show()
