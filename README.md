@@ -48,3 +48,4 @@ Inicialmente desenvolvido para o auxilio de uma pós-graduanda para a realizaç�
     )
     Gerar Gráficos: 
     A análise cruzada inclui a geração de gráficos de barras automaticamente.
+
